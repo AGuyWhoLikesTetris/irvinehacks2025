@@ -6,6 +6,7 @@ export default function Home() {
 
     return (
         <div className="w-full h-full flex flex-col justify-between">
+            <div className="w-full text-3xl pt-5 pl-7"><b>Zot</b>Sync</div>
             <Outlet context={{setCurrPage: setCurrPage}}/>
             <div className="flex w-full h-16">
                 <Link to="/home/calendar"

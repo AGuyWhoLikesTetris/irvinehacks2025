@@ -36,8 +36,8 @@ export default function Profile() {
                 <div className="flex flex-col w-3/4 h-full m-auto">
                     <p className="text-4xl mt-16">Classes:</p>
                     <div className="grow flex items-center justify-between w-full m-auto">
-                        {profile.classes.map((name) =>
-                            <Card>{name}</Card>
+                        {profile.classes.map((name, i) =>
+                            <Card key={i}>{name}</Card>
                         )}
                     </div>
                 </div>

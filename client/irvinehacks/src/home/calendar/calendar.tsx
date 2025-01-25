@@ -20,7 +20,7 @@ export default function Calendar() {
 
     return (
         <div className="grow">
-            <div className="w-full h-full p-28 px-44">
+            <div className="w-full h-full p-16 px-44">
                 <div onWheel={e => handleScroll(e)} className="w-full h-full calendarParent justify-items-center">
                     <div className="flex items-center">Monday</div>
                     <div className="flex items-center">Tuesday</div>
@@ -42,7 +42,7 @@ function Monday({offSet}: {offSet: number}) {
     return (
         <div className="grid grid-rows-7 w-full">
             {[...Array(7)].map((_, i) =>
-                <div className={`relative border-t ${i == 6 ? "border-b" : ''} border-gray-300 flex items-center justify-center`}>
+                <div key={i} className={`relative border-t ${i == 6 ? "border-b" : ''} border-gray-300 flex items-center justify-center`}>
                     <div className="absolute -top-2.5 -left-5 text-sm">{calculateTime(i, offSet)}</div>
                     {i == 6 ? <div className="absolute -bottom-2.5 -left-5 text-sm">{calculateTime(i + 1, offSet)}</div> : <></>}
                 </div>
@@ -55,7 +55,7 @@ function WeekDay() {
     return (
         <div className="grid grid-rows-7 w-full">
             {[...Array(7)].map((_, i) =>
-                <div className={`border-t ${i == 6 ? "border-b" : ''} border-gray-300 flex items-center justify-center`}></div>
+                <div key={i} className={`border-t ${i == 6 ? "border-b" : ''} border-gray-300 flex items-center justify-center`}></div>
             )}
         </div>
     );
