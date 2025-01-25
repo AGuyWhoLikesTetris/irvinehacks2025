@@ -1,10 +1,10 @@
-.parent {
+.profileParent {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(2, 1fr);
     grid-gap: 0;
 }
 
-.div1 { grid-area: 1 / 1 / 2 / 2; }
-.div2 { grid-area: 1 / 2 / 2 / 3; }
-.div3 { grid-area: 2 / 1 / 3 / 3; }
+.profileDiv1 { grid-area: 1 / 1 / 2 / 2; }
+.profileDiv2 { grid-area: 1 / 2 / 2 / 3; }
+.profileDiv3 { grid-area: 2 / 1 / 3 / 3; }
