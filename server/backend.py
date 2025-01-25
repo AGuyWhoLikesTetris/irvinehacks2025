@@ -251,6 +251,53 @@ def delete_friend():
         conn.close()
     return "Deleted friend successfully"
 
+@app.route('/suggest_friends')
+def suggest_friends():
+    '''Requires id in the form of a query param'''
+    id = flask.request.args.get('id', '')
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    # Get the user's courses
+    c.execute("SELECT course_id FROM enrollment WHERE id=?", (id,))
+    user_courses = set([course[0] for course in c.fetchall()])
+
+    # Get all other users and their courses
+    c.execute("SELECT id, course_id FROM enrollment WHERE id != ?", (id,))
+    all_enrollments = c.fetchall()
+
+    # Get current friends
+    c.execute("SELECT friend_id FROM friend WHERE id=?", (id,))
+    current_friends = set([friend[0] for friend in c.fetchall()])
+
+    # Calculate similarity scores
+    user_similarities = {}
+    for enrollment in all_enrollments:
+        other_id, course = enrollment
+        if other_id not in user_similarities:
+            user_similarities[other_id] = 0
+        if course in user_courses:
+            user_similarities[other_id] += 1
+
+    # Sort users by similarity score
+    suggested_friends = sorted(user_similarities.items(), key=lambda x: x[1], reverse=True)
+
+    # Filter out current friends and limit to top 5 suggestions
+    suggested_friends = [
+        {"id": user_id, "shared_courses": score}
+        for user_id, score in suggested_friends
+        if user_id not in current_friends and score > 0
+    ][:5]
+
+    # Get names for suggested friends
+    for friend in suggested_friends:
+        c.execute("SELECT name FROM student WHERE id=?", (friend['id'],))
+        friend['name'] = c.fetchone()[0]
+
+    conn.close()
+
+    return flask.jsonify(suggested_friends)
+
 if __name__ == "__main__":
     init_db()
     app.run(port=8000, debug=True)
