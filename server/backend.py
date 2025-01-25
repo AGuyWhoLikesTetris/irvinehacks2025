@@ -74,7 +74,7 @@ def add_user():
         conn.close()
     return flask.redirect(flask.url_for('index'))
 
-@app.route('/delete')
+@app.route('/delete/user')
 def delete_user(id):
     '''Requires id in the form of a query param'''
     id = flask.request.args.get('id', '')
@@ -139,6 +139,7 @@ def add_friend_request():
     c = conn.cursor()
     c.execute("INSERT INTO friend_request (id, friend_id) \
                 VALUES (?, ?)", (friend_id, id))
+    print(f"friend_req to {id}")
     conn.commit()
     conn.close()
     return flask.redirect(flask.url_for('index'))
@@ -151,11 +152,33 @@ def add_friend():
     friend_id = content['friend_id']
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
+    c.execute("SELECT id FROM friend_request WHERE id=?", (id,))
+    f_reqs = c.fetchall()
+    print(f_reqs)
+    f_reqs = [i[0] for i in f_reqs]
+    if friend_id not in f_reqs:
+        return "Friend request does not exist"
     c.execute("INSERT INTO friend (id, friend_id) \
                 VALUES (?, ?)", (id, friend_id))
+    c.execute("INSERT INTO friend (id, friend_id) \
+                VALUES (?, ?)", (friend_id, id))
     conn.commit()
     conn.close()
-    return flask.redirect(flask.url_for('index'))
+    return "Added friend successfully"
+
+@app.route('/delete/friend', methods=['POST'])
+def delete_friend():
+    '''Requires id in query param and friend_id in json data'''
+    content = flask.request.json
+    id = flask.request.args.get('id', '')
+    friend_id = content['friend_id']
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM friend WHERE id=? AND friend_id=?", (id, friend_id))
+    c.execute("DELETE FROM friend WHERE id=? AND friend_id=?", (friend_id, id))
+    conn.commit()
+    conn.close()
+    return "Deleted friend successfully"
 
 if __name__ == "__main__":
     init_db()
