@@ -40,10 +40,11 @@ def index():
 @app.route('/add', methods=['POST'])
 def add_user():
     '''Requires id, name, degree, grade in form data'''
-    id = flask.request.form['id']
-    name = flask.request.form['name']
-    degree = flask.request.form['degree']
-    grade = flask.request.form['grade']
+    content = flask.request.json
+    id = content['id']
+    name = content['name']
+    degree = content['degree']
+    grade = content['grade']
     if name:
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
@@ -53,8 +54,9 @@ def add_user():
         conn.close()
     return flask.redirect(flask.url_for('index'))
 
-@app.route('/delete/<int:id>')
+@app.route('/delete')
 def delete_user(id):
+    id = flask.request.args.get('id', '')
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     c.execute("DELETE FROM student WHERE id=?", (id,))
@@ -62,22 +64,25 @@ def delete_user(id):
     conn.close()
     return flask.redirect(flask.url_for('index'))
 
-@app.route('/view/<int:id>')
-def view(id):
+@app.route('/view')
+def view():
+    id = flask.request.args.get('id', '')
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     c.execute("SELECT * FROM student WHERE id=?", (id,))
     user = c.fetchone()
     c.execute("SELECT course_id FROM enrollment WHERE id=?", (id,))
     courses = c.fetchall()
+    courses_flat = [i[0] for i in courses]
     conn.close()
-    rtn_obj = {'id': user[0], 'name': user[1], 'degree': user[2], 'grade': user[3], 'courses': courses}
+    rtn_obj = {'id': user[0], 'name': user[1], 'degree': user[2], 'grade': user[3], 'courses': courses_flat}
     return rtn_obj
 
 @app.route('/add_classes', methods=['POST'])
 def add_classes():
-    id = flask.request.form['id']
-    classes = flask.request.form['classes']
+    content = flask.request.json
+    id = content['id']
+    classes = content['classes']
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     print(classes)
@@ -87,6 +92,7 @@ def add_classes():
                     VALUES (?, ?)", (id, course_id))
     conn.commit()
     conn.close()
+    return flask.redirect(flask.url_for('index'))
 
 if __name__ == "__main__":
     init_db()
