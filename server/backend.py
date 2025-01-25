@@ -102,29 +102,29 @@ def view():
     friends = c.fetchall()
     friends_flat = [int(i[0]) for i in friends]
     conn.close()
-    courses = {
-        'course_list': courses_flat,
-        'day': day,
-        'time': time
-    }
+    courses = []
+    for i in range(len(courses_flat)):
+        courses.append({
+            'course_name': courses_flat[i],
+            'day': day[i],
+            'time': time[i]
+        })
     rtn_obj = {'id': user[0], 'name': user[1], 'degree': user[2], 'grade': user[3], 'courses': courses, 'friends': friends_flat}
     return rtn_obj
 
-@app.route('/add/classes', methods=['POST'])
+@app.route('/add/courses', methods=['POST'])
 def add_classes():
     '''Requires id in query param and a list of classes in json data'''
     content = flask.request.json
     id = content['id']
     day = content['day']
     time = content['time']
-    classes = content['classes']
+    courses = content['course_name']
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    print(classes)
-    for course_id in classes:
-        print(course_id)
+    for i in range(len(courses)):
         c.execute("INSERT INTO enrollment (id, course_id, day, time) \
-                    VALUES (?, ?, ?, ?)", (id, course_id, day, time))
+                    VALUES (?, ?, ?, ?)", (id, courses[i], day[i], time[i]))
     conn.commit()
     conn.close()
     return flask.redirect(flask.url_for('index'))
