@@ -1,5 +1,6 @@
 import "./profile.css";
-import {ReactNode} from "react";
+import {ReactNode, useEffect} from "react";
+import {useOutletContext} from "react-router-dom";
 
 const profile = {
     name: "Jalen Lukumura",
@@ -10,8 +11,15 @@ const profile = {
 };
 
 export default function Profile() {
+    // @ts-ignore
+    const {setOnProfile} = useOutletContext();
+
+    useEffect(() => {
+        setOnProfile(true);
+    }, [])
+
     return (
-        <div className="parent h-full items-center mt-6">
+        <div className="parent grow items-center pt-6 px-20">
             <div className="div1">
                 <div className="flex flex-col items-start ml-16 gap-4">
                     <p className="text-center text-6xl p-4 border-4 border-black">{profile.name}</p>
@@ -21,7 +29,7 @@ export default function Profile() {
                 </div>
             </div>
             <div className="div2">
-            <img className="w-2/3 m-auto bg-sky-800 p-1 rounded-xl" src="https://i.redd.it/te843tecdv031.jpg"
+                <img className="w-2/3 m-auto bg-sky-800 p-1 rounded-xl" src="https://i.redd.it/te843tecdv031.jpg"
                      alt="icon"/>
             </div>
             <div className="div3 h-full">
@@ -38,9 +46,9 @@ export default function Profile() {
     );
 }
 
-function Card({children}: {children: Readonly<ReactNode>}) {
+function Card({children}: { children: Readonly<ReactNode> }) {
     return (
-        <div className="w-40 h-32 border-4 border-yellow-400 rounded-xl">
+        <div className="w-52 h-32 border-4 border-yellow-400 rounded-xl">
             <p className="text-center mt-6">{children}</p>
         </div>
     )
