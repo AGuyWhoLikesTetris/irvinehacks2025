@@ -51,10 +51,15 @@ def init_db():
 @app.route('/')
 def index():
     conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM student")
-    users = c.fetchall()
-    conn.close()
+    try:
+        c = conn.cursor()
+        c.execute("SELECT * FROM student")
+        users = c.fetchall()
+    except sqlite3.DatabaseError as e:
+        print(f"Error: {e}")
+        return "Failed to fetch users due to a database error."
+    finally:
+        conn.close()
     return users
 
 @app.route('/add/user', methods=['POST'])
@@ -67,11 +72,16 @@ def add_user():
     grade = int(content['grade'])
     if name:
         conn = sqlite3.connect('database.db')
-        c = conn.cursor()
-        c.execute("INSERT INTO student (id, name, major, grade) \
-                    VALUES (?, ?, ?, ?)", (id, name, major, grade))
-        conn.commit()
-        conn.close()
+        try:
+            c = conn.cursor()
+            c.execute("INSERT INTO student (id, name, major, grade) \
+                        VALUES (?, ?, ?, ?)", (id, name, major, grade))
+            conn.commit()
+        except sqlite3.IntegrityError as e:
+            print(f"Error: {e}")
+            return "Failed to add user due to a database error."
+        finally:
+            conn.close()
     return flask.redirect(flask.url_for('index'))
 
 @app.route('/delete/user')
@@ -79,10 +89,15 @@ def delete_user(id):
     '''Requires id in the form of a query param'''
     id = int(flask.request.args.get('id', ''))
     conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute("DELETE FROM student WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
+    try:
+        c = conn.cursor()
+        c.execute("DELETE FROM student WHERE id=?", (id,))
+        conn.commit()
+    except sqlite3.DatabaseError as e:
+        print(f"Error: {e}")
+        return "Failed to delete user due to a database error."
+    finally:
+        conn.close()
     return flask.redirect(flask.url_for('index'))
 
 @app.route('/view')
@@ -91,38 +106,42 @@ def view():
     id = int(flask.request.args.get('id', ''))
 
     conn = sqlite3.connect('database.db')
-    c = conn.cursor()
+    try:
+        c = conn.cursor()
 
-    c.execute("SELECT * FROM student WHERE id=?", (id,))
-    user = c.fetchone()
+        c.execute("SELECT * FROM student WHERE id=?", (id,))
+        user = c.fetchone()
 
-    c.execute("SELECT course_id, day, time FROM enrollment WHERE id=?", (id,))
-    courses = c.fetchall()
-    courses_flat = [i[0] for i in courses]
-    day = [i[1] for i in courses]
-    time = [i[2] for i in courses]
-    
-    c.execute("SELECT friend_id FROM friend WHERE id=?", (id,))
-    friends = c.fetchall()
-    friend_ids = [int(i[0]) for i in friends]
-    friend_names = []
-    for id in friend_ids:
-        c.execute("SELECT name FROM student WHERE id=?", (id,))
-        name = c.fetchone()
-        friend_names.append(name[0])
-    c.execute("SELECT * FROM friend_request")
-    friend_reqs = c.fetchall()
-    print(friend_reqs)
-    c.execute("SELECT id FROM friend_request WHERE friend_id=?", (id,))
-    friend_reqs = c.fetchall()
-    friend_req_ids = [int(i[0]) for i in friend_reqs]
-    friend_req_names = []
-    for id in friend_req_ids:
-        c.execute("SELECT name FROM student WHERE id=?", (id,))
-        name = c.fetchone()
-        friend_req_names.append(name[0])
-
-    conn.close()
+        c.execute("SELECT course_id, day, time FROM enrollment WHERE id=?", (id,))
+        courses = c.fetchall()
+        courses_flat = [i[0] for i in courses]
+        day = [i[1] for i in courses]
+        time = [i[2] for i in courses]
+        
+        c.execute("SELECT friend_id FROM friend WHERE id=?", (id,))
+        friends = c.fetchall()
+        friend_ids = [int(i[0]) for i in friends]
+        friend_names = []
+        for id in friend_ids:
+            c.execute("SELECT name FROM student WHERE id=?", (id,))
+            name = c.fetchone()
+            friend_names.append(name[0])
+        c.execute("SELECT * FROM friend_request")
+        friend_reqs = c.fetchall()
+        print(friend_reqs)
+        c.execute("SELECT id FROM friend_request WHERE friend_id=?", (id,))
+        friend_reqs = c.fetchall()
+        friend_req_ids = [int(i[0]) for i in friend_reqs]
+        friend_req_names = []
+        for id in friend_req_ids:
+            c.execute("SELECT name FROM student WHERE id=?", (id,))
+            name = c.fetchone()
+            friend_req_names.append(name[0])
+    except sqlite3.DatabaseError as e:
+        print(f"Error: {e}")
+        return "Failed to view user details due to a database error."
+    finally:
+        conn.close()
 
     courses = []
     for i in range(len(courses_flat)):
@@ -152,12 +171,17 @@ def add_classes():
     time = content['time']
     courses = content['course_name']
     conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    for i in range(len(courses)):
-        c.execute("INSERT INTO enrollment (id, course_id, day, time) \
-                    VALUES (?, ?, ?, ?)", (id, courses[i], day[i], time[i]))
-    conn.commit()
-    conn.close()
+    try:
+        c = conn.cursor()
+        for i in range(len(courses)):
+            c.execute("INSERT INTO enrollment (id, course_id, day, time) \
+                        VALUES (?, ?, ?, ?)", (id, courses[i], day[i], time[i]))
+        conn.commit()
+    except sqlite3.IntegrityError as e:
+        print(f"Error: {e}")
+        return "Failed to add courses due to a database error."
+    finally:
+        conn.close()
     return flask.redirect(flask.url_for('index'))
 
 @app.route('/add/friend_request', methods=['POST'])
@@ -167,12 +191,17 @@ def add_friend_request():
     id = flask.request.args.get('id', '')
     friend_id = int(content['friend_id'])
     conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute("INSERT INTO friend_request (id, friend_id) \
-                VALUES (?, ?)", (id, friend_id))
-    print(f"friend_req to {friend_id}")
-    conn.commit()
-    conn.close()
+    try:
+        c = conn.cursor()
+        c.execute("INSERT INTO friend_request (id, friend_id) \
+                    VALUES (?, ?)", (id, friend_id))
+        print(f"friend_req to {friend_id}")
+        conn.commit()
+    except sqlite3.IntegrityError as e:
+        print(f"Error: {e}")
+        return "Failed to add friend request due to a database error."
+    finally:
+        conn.close()
     return flask.redirect(flask.url_for('index'))
 
 @app.route('/add/friend', methods=['POST'])
@@ -182,21 +211,24 @@ def add_friend():
     id = int(flask.request.args.get('id', ''))
     friend_id = int(content['friend_id'])
     conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute("SELECT friend_id FROM friend_request WHERE id=?", (id,))
-    f_reqs = c.fetchall()
-    print(f_reqs)
-    f_reqs = [int(i[0]) for i in f_reqs]
-    print(f_reqs)
-    if friend_id not in f_reqs:
-        return "Friend request does not exist"
-    c.execute("INSERT INTO friend (id, friend_id) \
-                VALUES (?, ?)", (id, friend_id))
-    c.execute("INSERT INTO friend (id, friend_id) \
-                VALUES (?, ?)", (friend_id, id))
-    c.execute("DELETE FROM friend_request WHERE id=? AND friend_id=?", (id, friend_id))
-    conn.commit()
-    conn.close()
+    try:
+        c = conn.cursor()
+        c.execute("SELECT friend_id FROM friend_request WHERE id=?", (id,))
+        f_reqs = c.fetchall()
+        f_reqs = [int(i[0]) for i in f_reqs]
+        if friend_id not in f_reqs:
+            return "Friend request does not exist"
+        c.execute("INSERT INTO friend (id, friend_id) \
+                    VALUES (?, ?)", (id, friend_id))
+        c.execute("INSERT INTO friend (id, friend_id) \
+                    VALUES (?, ?)", (friend_id, id))
+        c.execute("DELETE FROM friend_request WHERE id=? AND friend_id=?", (id, friend_id))
+        conn.commit()
+    except sqlite3.IntegrityError as e:
+        print(f"Error: {e}")
+        return "Failed to add friend due to a database error."
+    finally:
+        conn.close()
     return "Added friend successfully"
 
 @app.route('/delete/friend', methods=['POST'])
@@ -206,11 +238,16 @@ def delete_friend():
     id = flask.request.args.get('id', '')
     friend_id = int(content['friend_id'])
     conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute("DELETE FROM friend WHERE id=? AND friend_id=?", (id, friend_id))
-    c.execute("DELETE FROM friend WHERE id=? AND friend_id=?", (friend_id, id))
-    conn.commit()
-    conn.close()
+    try:
+        c = conn.cursor()
+        c.execute("DELETE FROM friend WHERE id=? AND friend_id=?", (id, friend_id))
+        c.execute("DELETE FROM friend WHERE id=? AND friend_id=?", (friend_id, id))
+        conn.commit()
+    except sqlite3.DatabaseError as e:
+        print(f"Error: {e}")
+        return "Failed to delete friend due to a database error."
+    finally:
+        conn.close()
     return "Deleted friend successfully"
 
 if __name__ == "__main__":
