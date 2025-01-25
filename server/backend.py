@@ -13,7 +13,7 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS student(
         id INTEGER NOT NULL PRIMARY KEY,
         name TEXT,
-        degree TEXT,
+        major TEXT,
         grade INTEGER
          ) STRICT;''')
 
@@ -59,17 +59,17 @@ def index():
 
 @app.route('/add/user', methods=['POST'])
 def add_user():
-    '''Requires id, name, degree, grade in json data'''
+    '''Requires id, name, major, grade in json data'''
     content = flask.request.json
-    id = content['id']
+    id = int(content['id'])
     name = content['name']
-    degree = content['degree']
-    grade = content['grade']
+    major = content['major']
+    grade = int(content['grade'])
     if name:
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
-        c.execute("INSERT INTO student (id, name, degree, grade) \
-                    VALUES (?, ?, ?, ?)", (id, name, degree, grade))
+        c.execute("INSERT INTO student (id, name, major, grade) \
+                    VALUES (?, ?, ?, ?)", (id, name, major, grade))
         conn.commit()
         conn.close()
     return flask.redirect(flask.url_for('index'))
@@ -77,7 +77,7 @@ def add_user():
 @app.route('/delete/user')
 def delete_user(id):
     '''Requires id in the form of a query param'''
-    id = flask.request.args.get('id', '')
+    id = int(flask.request.args.get('id', ''))
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     c.execute("DELETE FROM student WHERE id=?", (id,))
@@ -88,20 +88,42 @@ def delete_user(id):
 @app.route('/view')
 def view():
     '''Requires id in the form of a query param'''
-    id = flask.request.args.get('id', '')
+    id = int(flask.request.args.get('id', ''))
+
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
+
     c.execute("SELECT * FROM student WHERE id=?", (id,))
     user = c.fetchone()
+
     c.execute("SELECT course_id, day, time FROM enrollment WHERE id=?", (id,))
     courses = c.fetchall()
     courses_flat = [i[0] for i in courses]
     day = [i[1] for i in courses]
     time = [i[2] for i in courses]
+    
     c.execute("SELECT friend_id FROM friend WHERE id=?", (id,))
     friends = c.fetchall()
-    friends_flat = [int(i[0]) for i in friends]
+    friend_ids = [int(i[0]) for i in friends]
+    friend_names = []
+    for id in friend_ids:
+        c.execute("SELECT name FROM student WHERE id=?", (id,))
+        name = c.fetchone()
+        friend_names.append(name[0])
+    c.execute("SELECT * FROM friend_request")
+    friend_reqs = c.fetchall()
+    print(friend_reqs)
+    c.execute("SELECT id FROM friend_request WHERE friend_id=?", (id,))
+    friend_reqs = c.fetchall()
+    friend_req_ids = [int(i[0]) for i in friend_reqs]
+    friend_req_names = []
+    for id in friend_req_ids:
+        c.execute("SELECT name FROM student WHERE id=?", (id,))
+        name = c.fetchone()
+        friend_req_names.append(name[0])
+
     conn.close()
+
     courses = []
     for i in range(len(courses_flat)):
         courses.append({
@@ -109,14 +131,23 @@ def view():
             'day': day[i],
             'time': time[i]
         })
-    rtn_obj = {'id': user[0], 'name': user[1], 'degree': user[2], 'grade': user[3], 'courses': courses, 'friends': friends_flat}
+
+    friends = {}
+    for i in range(len(friend_names)):
+        friends[friend_ids[i]] = friend_names[i]
+    
+    friend_reqs = {}
+    for i in range(len(friend_req_ids)):
+        friend_reqs[friend_req_ids[i]] = friend_req_names[i]
+
+    rtn_obj = {'id': user[0], 'name': user[1], 'major': user[2], 'grade': user[3], 'courses': courses, 'friends': friends, 'friend_reqs': friend_reqs}
     return rtn_obj
 
 @app.route('/add/courses', methods=['POST'])
 def add_classes():
     '''Requires id in query param and a list of classes in json data'''
     content = flask.request.json
-    id = content['id']
+    id = int(content['id'])
     day = content['day']
     time = content['time']
     courses = content['course_name']
@@ -134,12 +165,12 @@ def add_friend_request():
     '''Requires id in query param and friend_id in json data'''
     content = flask.request.json
     id = flask.request.args.get('id', '')
-    friend_id = content['friend_id']
+    friend_id = int(content['friend_id'])
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     c.execute("INSERT INTO friend_request (id, friend_id) \
-                VALUES (?, ?)", (friend_id, id))
-    print(f"friend_req to {id}")
+                VALUES (?, ?)", (id, friend_id))
+    print(f"friend_req to {friend_id}")
     conn.commit()
     conn.close()
     return flask.redirect(flask.url_for('index'))
@@ -148,20 +179,22 @@ def add_friend_request():
 def add_friend():
     '''Requires id in query param and friend_id in json data'''
     content = flask.request.json
-    id = flask.request.args.get('id', '')
-    friend_id = content['friend_id']
+    id = int(flask.request.args.get('id', ''))
+    friend_id = int(content['friend_id'])
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("SELECT id FROM friend_request WHERE id=?", (id,))
+    c.execute("SELECT friend_id FROM friend_request WHERE id=?", (id,))
     f_reqs = c.fetchall()
     print(f_reqs)
-    f_reqs = [i[0] for i in f_reqs]
+    f_reqs = [int(i[0]) for i in f_reqs]
+    print(f_reqs)
     if friend_id not in f_reqs:
         return "Friend request does not exist"
     c.execute("INSERT INTO friend (id, friend_id) \
                 VALUES (?, ?)", (id, friend_id))
     c.execute("INSERT INTO friend (id, friend_id) \
                 VALUES (?, ?)", (friend_id, id))
+    c.execute("DELETE FROM friend_request WHERE id=? AND friend_id=?", (id, friend_id))
     conn.commit()
     conn.close()
     return "Added friend successfully"
@@ -171,7 +204,7 @@ def delete_friend():
     '''Requires id in query param and friend_id in json data'''
     content = flask.request.json
     id = flask.request.args.get('id', '')
-    friend_id = content['friend_id']
+    friend_id = int(content['friend_id'])
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     c.execute("DELETE FROM friend WHERE id=? AND friend_id=?", (id, friend_id))
