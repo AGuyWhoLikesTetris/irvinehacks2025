@@ -21,6 +21,8 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS enrollment(
         id INTEGER NOT NULL,
         course_id TEXT NOT NULL,
+        day TEXT NOT NULL,
+        time TEXT NOT NULL,
         PRIMARY KEY (id, course_id),
         FOREIGN KEY (id) REFERENCES student(id)
          ) STRICT;''')
@@ -91,29 +93,38 @@ def view():
     c = conn.cursor()
     c.execute("SELECT * FROM student WHERE id=?", (id,))
     user = c.fetchone()
-    c.execute("SELECT course_id FROM enrollment WHERE id=?", (id,))
+    c.execute("SELECT course_id, day, time FROM enrollment WHERE id=?", (id,))
     courses = c.fetchall()
     courses_flat = [i[0] for i in courses]
+    day = [i[1] for i in courses]
+    time = [i[2] for i in courses]
     c.execute("SELECT friend_id FROM friend WHERE id=?", (id,))
     friends = c.fetchall()
     friends_flat = [int(i[0]) for i in friends]
     conn.close()
-    rtn_obj = {'id': user[0], 'name': user[1], 'degree': user[2], 'grade': user[3], 'courses': courses_flat, 'friends': friends_flat}
+    courses = {
+        'course_list': courses_flat,
+        'day': day,
+        'time': time
+    }
+    rtn_obj = {'id': user[0], 'name': user[1], 'degree': user[2], 'grade': user[3], 'courses': courses, 'friends': friends_flat}
     return rtn_obj
 
 @app.route('/add/classes', methods=['POST'])
 def add_classes():
     '''Requires id in query param and a list of classes in json data'''
     content = flask.request.json
-    id = flask.request.args.get('id', '')
+    id = content['id']
+    day = content['day']
+    time = content['time']
     classes = content['classes']
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     print(classes)
     for course_id in classes:
         print(course_id)
-        c.execute("INSERT INTO enrollment (id, course_id) \
-                    VALUES (?, ?)", (id, course_id))
+        c.execute("INSERT INTO enrollment (id, course_id, day, time) \
+                    VALUES (?, ?, ?, ?)", (id, course_id, day, time))
     conn.commit()
     conn.close()
     return flask.redirect(flask.url_for('index'))
