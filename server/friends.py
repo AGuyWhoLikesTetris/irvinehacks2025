@@ -74,8 +74,9 @@ def add_friend_request():
     conn = sqlite3.connect('database.db')
     try:
         c = conn.cursor()
-        c.execute("SELECT friend_id FROM friend WHERE id=?", (id,))
-        if friend_id in c.fetchall():
+        c.execute("SELECT id FROM friend WHERE friend_id=?", (id,))
+        friends_flattened = [i[0] for i in c.fetchall()] 
+        if friend_id in friends_flattened:
             return "Friend already exists."
         c.execute("INSERT INTO friend_request (id, friend_id) \
                     VALUES (?, ?)", (id, friend_id))
