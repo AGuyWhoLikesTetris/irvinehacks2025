@@ -159,3 +159,48 @@ def suggest_friends():
     conn.close()
 
     return flask.jsonify(suggested_friends)
+
+@bp.route('/view/friends/day', methods=['GET'])
+@cross_origin()
+def get_course_info_by_day():
+    id = flask.request.args.get('id', '')
+    days = 'MTuWThF'
+    try:
+        course_info = []
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+        c.execute("SELECT friend_id FROM friend WHERE id=?", (id,))
+        friends = c.fetchall()
+        friends = [friend[0] for friend in friends]
+        for i in range(len(days)):
+            course_day = []
+            for k in range(len(friends)):
+                c = conn.cursor()
+                if days[i] == 'T':
+                    c.execute("SELECT section_code FROM enrollment WHERE days LIKE ? AND id=?", (f'%{days[i:i+1]}%',friends[k]))
+                else:
+                    c.execute("SELECT section_code FROM enrollment WHERE days LIKE ? AND id=?", (f'%{days[i]}%',friends[k]))
+                courses = c.fetchall()
+                courses_flat = [course[0] for course in courses]
+                print(courses_flat)
+                for j in range(len(courses_flat)):
+                    c.execute("SELECT course_name, start_time_hour, start_time_minute, end_time_hour, end_time_minute, course_type FROM enrollment WHERE section_code=?", (courses_flat[j],))
+                    results = c.fetchone()
+                    print(results)
+                    course_day.append({
+                        "courseName": results[0],
+                        "time": [results[1] + (results[2] / 60), results[3] + (results[4] / 60)],
+                        "courseType": results[5],
+                        "id": friends[k]
+                    })
+            course_info.append(course_day)
+            if days[i] == 'T':
+                i += 1
+        return course_info
+
+    except sqlite3.DatabaseError as e:
+        print(f"Error: {e}")
+        return f"Failed to get course info due to a database error: {e}"
+    finally:
+        conn.close()
+    return {"ok": True}

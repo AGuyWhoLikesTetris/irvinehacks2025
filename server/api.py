@@ -35,7 +35,7 @@ def retrieve_course_information(section_codes: list[int]):
                     time = (startTime, endTime)
                     name = course['deptCode'] + " " + course['courseNumber']
                     course_type = section['sectionType']
-                    course_list.append({
+                    course_list.insert(0, {
                         "sectionCode": section_code,
                         "courseName": name,
                         "time": time,
