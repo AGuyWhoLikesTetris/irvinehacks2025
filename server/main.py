@@ -57,17 +57,7 @@ def init_db():
 @app.route('/')
 @cross_origin()
 def index():
-    conn = sqlite3.connect('database.db')
-    try:
-        c = conn.cursor()
-        c.execute("SELECT * FROM student")
-        users = c.fetchall()
-    except sqlite3.DatabaseError as e:
-        print(f"Error: {e}")
-        return f"Failed to fetch users due to a database error: {e}."
-    finally:
-        conn.close()
-    return users
+    return 'Use the endpoints /add/user, /delete/user, /view/user, /add/courses, /delete/courses, /add/friend, /delete/friend, /students_with_same_course'
 
 if __name__ == "__main__":
     init_db()

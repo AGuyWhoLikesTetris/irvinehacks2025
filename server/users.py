@@ -48,7 +48,7 @@ def add_user():
             return f"Failed to add user due to a database error: {e}."
         finally:
             conn.close()
-    return "User added successfully"
+    return {"ok": True}
 
 @bp.route('/delete/user', methods=['POST'])
 @cross_origin()
@@ -65,7 +65,7 @@ def delete_user(id):
         return f"Failed to delete user due to a database error: {e}."
     finally:
         conn.close()
-    return "User deleted successfully"
+    return {"ok": True}
 
 @bp.route('/view/user')
 @cross_origin()

@@ -28,7 +28,7 @@ def add_courses():
         return f"Failed to add courses due to a database error: {e}"
     finally:
         conn.close()
-    return "Added courses successfully"
+    return {"ok": True}
 
 @bp.route('/delete/courses', methods=['POST'])
 @cross_origin()
@@ -51,7 +51,7 @@ def delete_courses():
         return f"Failed to delete courses due to a database error: {e}"
     finally:
         conn.close()
-    return "Deleted courses successfully"
+    return {"ok": True}
 
 
 @bp.route('/students_with_same_course', methods=['GET'])

@@ -35,7 +35,7 @@ def add_friend():
         return f"Failed to add friend due to a database error: {e}"
     finally:
         conn.close()
-    return "Added friend successfully"
+    return {"ok": True}
 
 @bp.route('/delete/friend', methods=['POST'])
 @cross_origin()
@@ -58,7 +58,7 @@ def delete_friend():
         return f"Failed to delete friend due to a database error: {e}"
     finally:
         conn.close()
-    return "Deleted friend successfully"
+    return {"ok": True}
 
 
 @bp.route('/add/friend_request', methods=['POST'])
@@ -86,7 +86,7 @@ def add_friend_request():
         return f"Failed to add friend request due to a database error: {e}"
     finally:
         conn.close()
-    return "Friend request sent successfully"
+    return {"ok": True}
 
 @bp.route('/delete/friend_request', methods=['POST'])
 @cross_origin()
@@ -109,7 +109,7 @@ def delete_friend_request():
         return f"Failed to add friend due to a database error: {e}"
     finally:
         conn.close()
-    return "Rejected friend successfully"
+    return {"ok": True}
 
 @bp.route('/suggest_friends', methods=['GET'])
 @cross_origin()
