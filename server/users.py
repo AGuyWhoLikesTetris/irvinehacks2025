@@ -67,8 +67,8 @@ def delete_user(id):
         conn.close()
     return {"ok": True}
 
-@bp.route('/edit/user')
-@cross_origin
+@bp.route('/edit/user', methods=['POST'])
+@cross_origin()
 def edit_user():
     '''Requires id and a list of new values in json data'''
     try:
