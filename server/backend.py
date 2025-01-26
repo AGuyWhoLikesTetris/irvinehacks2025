@@ -1,20 +1,9 @@
 import flask
 import json
-import requests
 import sqlite3
+import api
 
 app = flask.Flask(__name__)
-
-def _retrieve_course_information(course_id: str):
-    url = "https://anteaterapi.com/v2/rest/courses/batch"
-    params = {"ids": course_id}
-    response = requests.get(url, params=params)
-    
-    if response.status_code == 200:
-        print(response.json())
-        return response.json()
-    else:
-        return {"error": "Failed to retrieve course information"}
 
 def init_db():
     connection = sqlite3.connect('database.db')
@@ -22,7 +11,7 @@ def init_db():
 
     # student table
     c.execute('''CREATE TABLE IF NOT EXISTS student(
-        id INTEGER NOT NULL PRIMARY KEY,
+        id TEXT NOT NULL PRIMARY KEY,
         name TEXT,
         major TEXT,
         grade INTEGER
@@ -30,17 +19,15 @@ def init_db():
 
     # enrollment table 
     c.execute('''CREATE TABLE IF NOT EXISTS enrollment(
-        id INTEGER NOT NULL,
-        course_id TEXT NOT NULL,
-        day TEXT NOT NULL,
-        time TEXT NOT NULL,
-        PRIMARY KEY (id, course_id),
+        id TEXT NOT NULL,
+        section_code INTEGER NOT NULL,
+        PRIMARY KEY (id, section_code),
         FOREIGN KEY (id) REFERENCES student(id)
          ) STRICT;''')
 
     # friend table 
     c.execute('''CREATE TABLE IF NOT EXISTS friend(
-        id INTEGER NOT NULL,
+        id TEXT NOT NULL,
         friend_id TEXT NOT NULL,
         PRIMARY KEY (id, friend_id),
         FOREIGN KEY (id) REFERENCES student(id)
@@ -49,7 +36,7 @@ def init_db():
 
     # friend_requests table 
     c.execute('''CREATE TABLE IF NOT EXISTS friend_request(
-        id INTEGER NOT NULL,
+        id TEXT NOT NULL,
         friend_id TEXT NOT NULL,
         PRIMARY KEY (id, friend_id),
         FOREIGN KEY (id) REFERENCES student(id)
@@ -78,7 +65,7 @@ def add_user():
     '''Requires id, name, major, grade in json data'''
     try:
         content = flask.request.json
-        id = int(content['id'])
+        id = content['id']
         name = content['name']
         major = content['major']
         grade = int(content['grade'])
@@ -101,7 +88,7 @@ def add_user():
 @app.route('/delete/user')
 def delete_user(id):
     '''Requires id in the form of a query param'''
-    id = int(flask.request.args.get('id', ''))
+    id = flask.request.args.get('id', '')
     conn = sqlite3.connect('database.db')
     try:
         c = conn.cursor()
@@ -117,7 +104,7 @@ def delete_user(id):
 @app.route('/view')
 def view():
     '''Requires id in the form of a query param'''
-    id = int(flask.request.args.get('id', ''))
+    id = flask.request.args.get('id', '')
 
     conn = sqlite3.connect('database.db')
     try:
@@ -126,45 +113,35 @@ def view():
         c.execute("SELECT * FROM student WHERE id=?", (id,))
         user = c.fetchone()
 
-        c.execute("SELECT course_id, day, time FROM enrollment WHERE id=?", (id,))
+        c.execute("SELECT section_code FROM enrollment WHERE id=?", (id,))
         courses = c.fetchall()
         courses_flat = [i[0] for i in courses]
-        day = [i[1] for i in courses]
-        time = [i[2] for i in courses]
         
         c.execute("SELECT friend_id FROM friend WHERE id=?", (id,))
         friends = c.fetchall()
-        friend_ids = [int(i[0]) for i in friends]
+        friend_ids = [i[0] for i in friends]
         friend_names = []
         for id in friend_ids:
             c.execute("SELECT name FROM student WHERE id=?", (id,))
             name = c.fetchone()
             friend_names.append(name[0])
-        c.execute("SELECT * FROM friend_request")
-        friend_reqs = c.fetchall()
-        print(friend_reqs)
+
         c.execute("SELECT id FROM friend_request WHERE friend_id=?", (id,))
         friend_reqs = c.fetchall()
-        friend_req_ids = [int(i[0]) for i in friend_reqs]
+        friend_req_ids = [i[0] for i in friend_reqs]
         friend_req_names = []
         for id in friend_req_ids:
             c.execute("SELECT name FROM student WHERE id=?", (id,))
             name = c.fetchone()
             friend_req_names.append(name[0])
+
     except sqlite3.DatabaseError as e:
         print(f"Error: {e}")
         return f"Failed to view user details due to a database error: {e}."
     finally:
         conn.close()
 
-    courses = []
-    for i in range(len(courses_flat)):
-        courses.append({
-            'course_id': courses_flat[i],
-            'course_name': _retrieve_course_information(courses_flat[i])['title'],
-            'day': day[i],
-            'time': time[i]
-        })
+    courses = api.retrieve_course_information(courses_flat)
 
     friends = {}
     for i in range(len(friend_names)):
@@ -174,26 +151,24 @@ def view():
     for i in range(len(friend_req_ids)):
         friend_reqs[friend_req_ids[i]] = friend_req_names[i]
 
-    rtn_obj = {'id': user[0], 'name': user[1], 'major': user[2], 'grade': user[3], 'courses': courses, 'friends': friends, 'friend_reqs': friend_reqs}
+    rtn_obj = {'id': user[0], 'name': user[1], 'major': user[2], 'grade': user[3], 'courses': courses, 'friends': friends, 'friendReqs': friend_reqs}
     return rtn_obj
 
 @app.route('/add/courses', methods=['POST'])
 def add_courses():
-    '''Requires id in query param and a list of classes in json data'''
+    '''Requires id and a list of classes in json data'''
     try:
         content = flask.request.json
-        id = int(content['id'])
-        day = content['day']
-        time = content['time']
-        courses = content['course_name']
+        id = content['id']
+        courses = content['section_codes']
     except KeyError as e:
         return f"Missing key in JSON input: {e}", 400
     conn = sqlite3.connect('database.db')
     try:
         c = conn.cursor()
         for i in range(len(courses)):
-            c.execute("INSERT INTO enrollment (id, course_id, day, time) \
-                        VALUES (?, ?, ?, ?)", (id, courses[i], day[i], time[i]))
+            c.execute("INSERT INTO enrollment (id, section_code) \
+                        VALUES (?, ?)", (id, courses[i]))
         conn.commit()
     except sqlite3.IntegrityError as e:
         print(f"Error: {e}")
@@ -202,13 +177,35 @@ def add_courses():
         conn.close()
     return "Added courses successfully"
 
+@app.route('/delete/courses', methods=['POST'])
+def delete_courses():
+    '''Requires id in query param and a list of classes in json data'''
+    try:
+        content = flask.request.json
+        id = flask.request.args.get('id', '')
+        courses = content['section_code']
+    except KeyError as e:
+        return f"Missing key in JSON input: {e}", 400
+    conn = sqlite3.connect('database.db')
+    try:
+        c = conn.cursor()
+        for i in range(len(courses)):
+            c.execute("DELETE FROM enrollment WHERE id=? AND section_code=?", (id, courses[i]))
+        conn.commit()
+    except sqlite3.DatabaseError as e:
+        print(f"Error: {e}")
+        return f"Failed to delete courses due to a database error: {e}"
+    finally:
+        conn.close()
+    return "Deleted courses successfully"
+
 @app.route('/add/friend_request', methods=['POST'])
 def add_friend_request():
     '''Requires id in query param and friend_id in json data'''
     try:
         content = flask.request.json
         id = flask.request.args.get('id', '')
-        friend_id = int(content['friend_id'])
+        friend_id = content['friend_id']
     except KeyError as e:
         return f"Missing key in JSON input: {e}", 400
     conn = sqlite3.connect('database.db')
@@ -230,8 +227,8 @@ def add_friend():
     '''Requires id in query param and friend_id in json data'''
     try:
         content = flask.request.json
-        id = int(flask.request.args.get('id', ''))
-        friend_id = int(content['friend_id'])
+        id = flask.request.args.get('id', '')
+        friend_id = content['friend_id']
     except KeyError as e:
         return f"Missing key in JSON input: {e}", 400
     conn = sqlite3.connect('database.db')
@@ -239,7 +236,7 @@ def add_friend():
         c = conn.cursor()
         c.execute("SELECT friend_id FROM friend_request WHERE id=?", (id,))
         f_reqs = c.fetchall()
-        f_reqs = [int(i[0]) for i in f_reqs]
+        f_reqs = [i[0] for i in f_reqs]
         if friend_id not in f_reqs:
             return "Friend request does not exist"
         c.execute("INSERT INTO friend (id, friend_id) \
@@ -262,7 +259,7 @@ def delete_friend():
     try:
         content = flask.request.json
         id = flask.request.args.get('id', '')
-        friend_id = int(content['friend_id'])
+        friend_id = content['friend_id']
     except KeyError as e:
         return f"Missing key in JSON input: {e}", 400
     conn = sqlite3.connect('database.db')
@@ -286,11 +283,11 @@ def suggest_friends():
     c = conn.cursor()
 
     # Get the user's courses
-    c.execute("SELECT course_id FROM enrollment WHERE id=?", (id,))
+    c.execute("SELECT section_code FROM enrollment WHERE id=?", (id,))
     user_courses = set([course[0] for course in c.fetchall()])
 
     # Get all other users and their courses
-    c.execute("SELECT id, course_id FROM enrollment WHERE id != ?", (id,))
+    c.execute("SELECT id, section_code FROM enrollment WHERE id != ?", (id,))
     all_enrollments = c.fetchall()
 
     # Get current friends
@@ -335,16 +332,16 @@ def students_with_same_course():
         c = conn.cursor()
 
         # Check if the user is enrolled in the given course
-        c.execute("SELECT 1 FROM enrollment WHERE id=? AND course_id=?", (id, course_name))
+        c.execute("SELECT 1 FROM enrollment WHERE id=? AND section_code=?", (id, course_name))
         if not c.fetchone():
             return "The student is not enrolled in the given course", 404
 
         # Get students with the same course
-        c.execute("SELECT id FROM enrollment WHERE course_id=?", (course_name,))
+        c.execute("SELECT id FROM enrollment WHERE section_code=?", (course_name,))
         all_enrollments = c.fetchall()
 
         # Filter out the given student
-        students_with_same_course = [student_id[0] for student_id in all_enrollments if student_id[0] != int(id)]
+        students_with_same_course = [student_id[0] for student_id in all_enrollments if student_id[0] != id]
 
         # Get names for students
         result = []
