@@ -106,14 +106,14 @@ def view():
 
         c.execute("SELECT * FROM enrollment WHERE id=?", (id,))
         courses = c.fetchall()
-        section_code = [i[0] for i in courses]
-        course_name = [i[1] for i in courses]
-        start_time_hour = [i[2] for i in courses]
-        start_time_minute = [i[3] for i in courses]
-        end_time_hour = [i[4] for i in courses]
-        end_time_minute = [i[5] for i in courses]
-        days = [i[6] for i in courses]
-        course_type = [i[7] for i in courses]
+        section_code = [i[1] for i in courses]
+        course_name = [i[2] for i in courses]
+        start_time_hour = [i[3] for i in courses]
+        start_time_minute = [i[4] for i in courses]
+        end_time_hour = [i[5] for i in courses]
+        end_time_minute = [i[6] for i in courses]
+        days = [i[7] for i in courses]
+        course_type = [i[8] for i in courses]
         
         c.execute("SELECT friend_id FROM friend WHERE id=?", (id,))
         friends = c.fetchall()
