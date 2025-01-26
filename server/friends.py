@@ -164,7 +164,7 @@ def suggest_friends():
 @cross_origin()
 def get_course_info_by_day():
     id = flask.request.args.get('id', '')
-    days = 'MTuWThF'
+    days = ['M','Tu','W','Th',"F"]
     try:
         course_info = []
         conn = sqlite3.connect('database.db')
@@ -176,10 +176,7 @@ def get_course_info_by_day():
             course_day = []
             for k in range(len(friends)):
                 c = conn.cursor()
-                if days[i] == 'T':
-                    c.execute("SELECT section_code FROM enrollment WHERE days LIKE ? AND id=?", (f'%{days[i:i+1]}%',friends[k]))
-                else:
-                    c.execute("SELECT section_code FROM enrollment WHERE days LIKE ? AND id=?", (f'%{days[i]}%',friends[k]))
+                c.execute("SELECT section_code FROM enrollment WHERE days LIKE ? AND id=?", (f'%{days[i]}%',friends[k]))
                 courses = c.fetchall()
                 courses_flat = [course[0] for course in courses]
                 print(courses_flat)
@@ -194,8 +191,6 @@ def get_course_info_by_day():
                         "id": friends[k]
                     })
             course_info.append(course_day)
-            if days[i] == 'T':
-                i += 1
         return course_info
 
     except sqlite3.DatabaseError as e:
