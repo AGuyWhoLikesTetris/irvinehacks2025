@@ -112,7 +112,7 @@ export default function Profile() {
                 </div>
             </div>
             <div className="profileDiv2">
-                <img className="w-2/3 m-auto bg-sky-800 p-1 rounded-xl" src="https://i.redd.it/te843tecdv031.jpg"
+                <img className="w-2/5 m-auto border-4 border-sky-800 rounded-xl" src="/zotsync.png"
                      alt="icon"/>
             </div>
             <div className="profileDiv3 h-full">
