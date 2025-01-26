@@ -29,6 +29,13 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS enrollment(
         id TEXT NOT NULL,
         section_code INTEGER NOT NULL,
+        course_name TEXT NOT NULL,
+        start_time_hour INTEGER NOT NULL,
+        start_time_minute INTEGER NOT NULL,
+        end_time_hour INTEGER NOT NULL,
+        end_time_minute INTEGER NOT NULL,
+        days TEXT NOT NULL,
+        course_type TEXT NOT NULL,
         PRIMARY KEY (id, section_code),
         FOREIGN KEY (id) REFERENCES student(id)
          ) STRICT;''')

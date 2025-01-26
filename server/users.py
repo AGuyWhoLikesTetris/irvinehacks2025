@@ -104,6 +104,75 @@ def view():
         c.execute("SELECT * FROM student WHERE id=?", (id,))
         user = c.fetchone()
 
+        c.execute("SELECT * FROM enrollment WHERE id=?", (id,))
+        courses = c.fetchall()
+        section_code = [i[0] for i in courses]
+        course_name = [i[1] for i in courses]
+        start_time_hour = [i[2] for i in courses]
+        start_time_minute = [i[3] for i in courses]
+        end_time_hour = [i[4] for i in courses]
+        end_time_minute = [i[5] for i in courses]
+        days = [i[6] for i in courses]
+        course_type = [i[7] for i in courses]
+        
+        c.execute("SELECT friend_id FROM friend WHERE id=?", (id,))
+        friends = c.fetchall()
+        friend_ids = [i[0] for i in friends]
+        friend_names = []
+        for id in friend_ids:
+            c.execute("SELECT name FROM student WHERE id=?", (id,))
+            name = c.fetchone()
+            friend_names.append(name[0])
+
+        c.execute("SELECT id FROM friend_request WHERE friend_id=?", (id,))
+        friend_reqs = c.fetchall()
+        friend_req_ids = [i[0] for i in friend_reqs]
+        friend_req_names = []
+        for id in friend_req_ids:
+            c.execute("SELECT name FROM student WHERE id=?", (id,))
+            name = c.fetchone()
+            friend_req_names.append(name[0])
+    except sqlite3.DatabaseError as e:
+        print(f"Error: {e}")
+        return f"Failed to view user details due to a database error: {e}."
+    finally:
+        conn.close()
+
+    
+    courses = []
+    for i in range(len(section_code)):
+        courses.append({
+            "sectionCode": section_code[i],
+            "courseName": course_name[i],
+            "time": [{'hour': start_time_hour[i], 'minute': start_time_minute[i]}, {'hour': end_time_hour[i], 'minute': end_time_minute[i]}],
+            "days": days[i],
+            "courseType": course_type[i]
+        })
+
+    friends = {}
+    for i in range(len(friend_names)):
+        friends[friend_ids[i]] = friend_names[i]
+    
+    friend_reqs = {}
+    for i in range(len(friend_req_ids)):
+        friend_reqs[friend_req_ids[i]] = friend_req_names[i]
+
+    rtn_obj = {'id': user[0], 'name': user[1], 'major': user[2], 'grade': user[3], 'courses': courses, 'friends': friends, 'friendReqs': friend_reqs}
+    return rtn_obj
+
+@bp.route('/view/user_profile')
+@cross_origin()
+def view_profile():
+    '''Requires id in the form of a query param'''
+    id = flask.request.args.get('id', '')
+
+    conn = sqlite3.connect('database.db')
+    try:
+        c = conn.cursor()
+
+        c.execute("SELECT * FROM student WHERE id=?", (id,))
+        user = c.fetchone()
+
         c.execute("SELECT section_code FROM enrollment WHERE id=?", (id,))
         courses = c.fetchall()
         courses_flat = [i[0] for i in courses]
@@ -131,8 +200,6 @@ def view():
     finally:
         conn.close()
 
-    courses = api.retrieve_course_information(courses_flat)
-
     friends = {}
     for i in range(len(friend_names)):
         friends[friend_ids[i]] = friend_names[i]
@@ -141,7 +208,7 @@ def view():
     for i in range(len(friend_req_ids)):
         friend_reqs[friend_req_ids[i]] = friend_req_names[i]
 
-    rtn_obj = {'id': user[0], 'name': user[1], 'major': user[2], 'grade': user[3], 'courses': courses, 'friends': friends, 'friendReqs': friend_reqs}
+    rtn_obj = {'id': user[0], 'name': user[1], 'major': user[2], 'grade': user[3], 'friends': friends, 'friendReqs': friend_reqs}
     return rtn_obj
 
 @bp.route('/search/users', methods=['GET'])

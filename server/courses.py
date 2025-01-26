@@ -19,15 +19,17 @@ def add_courses():
     conn = sqlite3.connect('database.db')
     try:
         c = conn.cursor()
+        course_info = api.retrieve_course_information(courses)
         for i in range(len(courses)):
-            if not api.check_valid_section_code(courses[i]):
-                return {"ok": False, "error": "Invalid section code"}
-            c.execute("INSERT INTO enrollment (id, section_code) \
-                        VALUES (?, ?)", (id, courses[i]))
+            c.execute("INSERT INTO enrollment (id, section_code, course_name, start_time_hour, start_time_minute, end_time_hour, end_time_minute, days, course_type) \
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, courses[i], course_info[i]['courseName'], course_info[i]['time'][0]['hour'], course_info[i]['time'][0]['minute'], course_info[i]['time'][1]['hour'], course_info[i]['time'][1]['minute'], course_info[i]['days'], course_info[i]['courseType']))
         conn.commit()
     except sqlite3.IntegrityError as e:
         print(f"Error: {e}")
         return f"Failed to add courses due to a database error: {e}"
+    except api.APIError as e:
+        print(f"Error: {e}")
+        return f"Failed to add courses due to an API error: {e}"
     finally:
         conn.close()
     return {"ok": True}

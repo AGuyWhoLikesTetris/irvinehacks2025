@@ -28,7 +28,6 @@ def retrieve_course_information(section_codes: list[int]):
         for department in school['departments']:
             for course in department['courses']:
                 for section in course['sections']:
-                    data = course
                     day = section['meetings'][0]['days']
                     startTime = section['meetings'][0]['startTime']
                     endTime = section['meetings'][0]['endTime']
