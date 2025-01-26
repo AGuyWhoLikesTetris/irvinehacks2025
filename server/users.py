@@ -4,6 +4,24 @@ import sqlite3
 
 bp = flask.Blueprint('users', __name__)
 
+@bp.route('/check_user_exists', methods=['GET'])
+def check_user_exists():
+    '''Requires id in the form of a query param'''
+    id = flask.request.args.get('id', '')
+    conn = sqlite3.connect('database.db')
+    try:
+        c = conn.cursor()
+        c.execute("SELECT * FROM student WHERE id=?", (id,))
+        user = c.fetchone()
+    except sqlite3.DatabaseError as e:
+        print(f"Error: {e}")
+        return f"Failed to check if user exists due to a database error: {e}."
+    finally:
+        conn.close()
+    if user:
+        return {"exists": True}
+    return {"exists": False}
+
 @bp.route('/add/user', methods=['POST'])
 def add_user():
     '''Requires id, name, major, grade in json data'''
