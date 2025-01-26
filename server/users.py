@@ -126,9 +126,7 @@ def view():
 
         c.execute("SELECT id FROM friend_request WHERE friend_id=?", (id,))
         friend_reqs = c.fetchall()
-        print(friend_reqs)
         friend_req_ids = [i[0] for i in friend_reqs]
-        print(friend_req_ids)
         friend_req_names = []
         for nid in friend_req_ids:
             c.execute("SELECT name FROM student WHERE id=?", (nid,))
@@ -180,3 +178,39 @@ def search_users():
     finally:
         conn.close()
     return {"users": users}
+
+@bp.route('/view/user/day', methods=['GET'])
+@cross_origin()
+def get_course_info_by_day():
+    id = flask.request.args.get('id', '')
+    days = 'MTuWThF'
+    conn = sqlite3.connect('database.db')
+    try:
+        course_info = []
+        for i in range(len(days)):
+            c = conn.cursor()
+            if days[i] == 'T':
+                c.execute("SELECT section_code FROM enrollment WHERE days LIKE ? AND id=?", (f'%{days[i:i+1]}%',id))
+                i += 1
+            else:
+                c.execute("SELECT section_code FROM enrollment WHERE days LIKE ? AND id=?", (f'%{days[i]}%',id))
+            courses = c.fetchall()
+            courses_flat = [course[0] for course in courses]
+            course_day = []
+            for j in range(len(courses_flat)):
+                c.execute("SELECT course_name, start_time_hour, start_time_minute, end_time_hour, end_time_minute, course_type FROM enrollment WHERE section_code=?", (courses_flat[j],))
+                results = c.fetchone()
+                course_day.append({
+                    "courseName": results[0],
+                    "time": [results[1] + (results[2] / 60), results[3] + (results[4] / 60)],
+                    "courseType": results[5]
+                })
+            course_info.append(course_day)
+        return course_info
+
+    except sqlite3.DatabaseError as e:
+        print(f"Error: {e}")
+        return f"Failed to get course info due to a database error: {e}"
+    finally:
+        conn.close()
+    return {"ok": True}
