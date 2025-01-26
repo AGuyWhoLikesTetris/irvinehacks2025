@@ -18,7 +18,7 @@ export default function Login() {
                 <div className="flex flex-col items-center justify-around min-w-72 w-1/4 h-3/5 m-auto mt-28 border-4 border-sky-700 bg-sky-50 rounded-xl">
                     <img width="280" src="/zotsync.png" alt="logo"/>
                     <button className="w-2/3 h-14 bg-sky-700 hover:bg-sky-800 text-white text-xl tracking-wider rounded-sm cursor-pointer"
-                        onClick={() => loginWithRedirect({authorizationParams: {redirect_uri: 'http://localhost:5173/home'}})}>Log
+                        onClick={() => loginWithRedirect({authorizationParams: {redirect_uri: 'http://localhost:5173/auth'}})}>Log
                         In
                     </button>
                     <div className="mx-14 text-center">Log in to view your schedule and connect with friends!</div>
