@@ -1,23 +1,44 @@
 import "./profile.css";
-import {ReactNode, useEffect} from "react";
+import {ReactNode, useEffect, useState} from "react";
 import {Link, useOutletContext} from "react-router-dom";
-//import {useAuth0} from "@auth0/auth0-react";
+import {useAuth0} from "@auth0/auth0-react";
 
-const profile = {
-    name: "Jalen Lukumura",
-    school: "University of Chinese Immigrants",
-    degree: "B.S. French Film Studies",
-    grade: "Super-Senior",
-    classes: ["HUM 1B", "HUM H1BS", "ICS 32", "MATH 3A"]
-};
+// const profile = {
+//     name: "Jalen Lukumura",
+//     school: "University of Chinese Immigrants",
+//     degree: "B.S. French Film Studies",
+//     grade: "Super-Senior",
+//     classes: ["HUM 1B", "HUM H1BS", "ICS 32", "MATH 3A"]
+// };
+
+const YEAR = ["First-Year", "Second-Year", "Third-Year", "Fourth-Year"];
 
 export default function Profile() {
     // @ts-ignore
     const {setCurrPage} = useOutletContext();
-    //const {user} = useAuth0();
+    const {user} = useAuth0();
+
+    const [profile, setProfile] = useState({name: '', degree: '', grade: '', classes: []});
 
     useEffect(() => {
         setCurrPage(1);
+
+        if (user != undefined) {
+            const id: string = user.sub!;
+
+            fetch(`http://localhost:8000/view/user?id=${encodeURIComponent(id)}`, {
+                method: "GET"
+            }).then(res => res.json())
+                .then(data => {
+                    console.log(data)
+                    setProfile({
+                        name: data.name,
+                        degree: data.major,
+                        grade: YEAR[data.grade - 1],
+                        classes: data.courses
+                    });
+                });
+        }
     }, [])
 
     return (
@@ -25,7 +46,6 @@ export default function Profile() {
             <div className="profileDiv1">
                 <div className="flex flex-col items-center ml-16 gap-4">
                     <b className="text-center text-6xl p-6 bg-sky-50 border-4 border-sky-800 rounded-xl">{profile.name}</b>
-                    <p className="text-center text-2xl mt-10">{profile.school}</p>
                     <p className="text-center text-2xl">{profile.degree}</p>
                     <p className="text-center text-2xl">{profile.grade}</p>
                     <Link to="/settings" className="flex gap-2 border-b-[1.5px]">
