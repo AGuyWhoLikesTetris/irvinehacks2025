@@ -13,7 +13,7 @@ export default function Home() {
                 {isAuthenticated && <div className="cursor-pointer hover:text-neutral-600 underline underline-offset-3" onClick={() => logout({logoutParams: {returnTo: window.location.origin}})}>Logout</div>}
             </div>
             <Outlet context={{setCurrPage: setCurrPage}}/>
-            <div className="flex w-full h-16">
+            <div className="flex w-full h-16 z-20s">
                 <Link to="/home/calendar"
                       className={`grow text-center ${currPage == 0 ? "bg-sky-600 hover:bg-sky-500" : "bg-sky-800 hover:bg-sky-700"}`}>
                     <img className="w-10 h-full m-auto" src="/calendarIcon.svg" alt="profile"/>

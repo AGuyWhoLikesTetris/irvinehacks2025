@@ -179,11 +179,9 @@ def get_course_info_by_day():
                 c.execute("SELECT section_code FROM enrollment WHERE days LIKE ? AND id=?", (f'%{days[i]}%',friends[k]))
                 courses = c.fetchall()
                 courses_flat = [course[0] for course in courses]
-                print(courses_flat)
                 for j in range(len(courses_flat)):
                     c.execute("SELECT course_name, start_time_hour, start_time_minute, end_time_hour, end_time_minute, course_type FROM enrollment WHERE section_code=?", (courses_flat[j],))
                     results = c.fetchone()
-                    print(results)
                     course_day.append({
                         "courseName": results[0],
                         "time": [results[1] + (results[2] / 60), results[3] + (results[4] / 60)],
