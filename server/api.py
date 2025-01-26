@@ -20,13 +20,14 @@ def _retrieve_course_api_result(section_code: list[int]):
         raise APIError(response.status_code)
 
 def retrieve_course_information(section_codes: list[int]):
+    if section_codes == []:
+        return []
     course_list = []
     original_data = _retrieve_course_api_result(section_codes)        
     for school in original_data['data']['schools']:
         for department in school['departments']:
             for course in department['courses']:
                 for section in course['sections']:
-                    print(section)
                     data = course
                     day = section['meetings'][0]['days']
                     startTime = section['meetings'][0]['startTime']

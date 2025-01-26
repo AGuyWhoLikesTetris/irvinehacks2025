@@ -85,10 +85,10 @@ def add_user():
             conn.close()
     return "User added successfully"
 
-@app.route('/delete/user')
+@app.route('/delete/user', methods=['POST'])
 def delete_user(id):
     '''Requires id in the form of a query param'''
-    id = flask.request.args.get('id', '')
+    id = flask.request.json['id']
     conn = sqlite3.connect('database.db')
     try:
         c = conn.cursor()
@@ -134,7 +134,6 @@ def view():
             c.execute("SELECT name FROM student WHERE id=?", (id,))
             name = c.fetchone()
             friend_req_names.append(name[0])
-
     except sqlite3.DatabaseError as e:
         print(f"Error: {e}")
         return f"Failed to view user details due to a database error: {e}."
@@ -182,8 +181,8 @@ def delete_courses():
     '''Requires id in query param and a list of classes in json data'''
     try:
         content = flask.request.json
-        id = flask.request.args.get('id', '')
-        courses = content['section_code']
+        id = content['id']
+        courses = content['section_codes']
     except KeyError as e:
         return f"Missing key in JSON input: {e}", 400
     conn = sqlite3.connect('database.db')
@@ -204,7 +203,7 @@ def add_friend_request():
     '''Requires id in query param and friend_id in json data'''
     try:
         content = flask.request.json
-        id = flask.request.args.get('id', '')
+        id = content['id']
         friend_id = content['friend_id']
     except KeyError as e:
         return f"Missing key in JSON input: {e}", 400
@@ -227,17 +226,17 @@ def add_friend():
     '''Requires id in query param and friend_id in json data'''
     try:
         content = flask.request.json
-        id = flask.request.args.get('id', '')
+        id = content['id']
         friend_id = content['friend_id']
     except KeyError as e:
         return f"Missing key in JSON input: {e}", 400
     conn = sqlite3.connect('database.db')
     try:
         c = conn.cursor()
-        c.execute("SELECT friend_id FROM friend_request WHERE id=?", (id,))
+        c.execute("SELECT friend_id FROM friend_request WHERE id=?", (friend_id,))
         f_reqs = c.fetchall()
         f_reqs = [i[0] for i in f_reqs]
-        if friend_id not in f_reqs:
+        if id not in f_reqs:
             return "Friend request does not exist"
         c.execute("INSERT INTO friend (id, friend_id) \
                     VALUES (?, ?)", (id, friend_id))
@@ -258,7 +257,7 @@ def delete_friend():
     '''Requires id in query param and friend_id in json data'''
     try:
         content = flask.request.json
-        id = flask.request.args.get('id', '')
+        id = content['id']
         friend_id = content['friend_id']
     except KeyError as e:
         return f"Missing key in JSON input: {e}", 400
@@ -275,7 +274,7 @@ def delete_friend():
         conn.close()
     return "Deleted friend successfully"
 
-@app.route('/suggest_friends')
+@app.route('/suggest_friends', methods=['GET'])
 def suggest_friends():
     '''Requires id in the form of a query param'''
     id = flask.request.args.get('id', '')
