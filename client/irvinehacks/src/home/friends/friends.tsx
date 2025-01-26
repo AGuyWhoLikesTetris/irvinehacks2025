@@ -12,6 +12,8 @@ export default function Friends() {
     const [friends, setFriends] = useState({});
     const [friendRequests, setFriendRequests] = useState({});
 
+    const [suggestions, setSuggestions] = useState([]);
+
     const {user} = useAuth0();
 
     const search = (formData: FormEvent) => {
@@ -95,6 +97,23 @@ export default function Friends() {
         }
     }
 
+    const getSuggestions = () => {
+        if (user != undefined) {
+            const id: string = user.sub!;
+
+            fetch(`http://localhost:8000/suggest_friends?id=${encodeURIComponent(id)}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then(response => response.json())
+                .then((data) => {
+                    console.log(data);
+                    setSuggestions(data);
+                })
+        }
+    }
+
     const update = () => {
         if (user != undefined) {
             const id: string = user.sub!;
@@ -115,12 +134,13 @@ export default function Friends() {
     useEffect(() => {
         setCurrPage(2);
         update();
+        getSuggestions();
     }, [])
 
     return (
-        <div className="grow p-16 px-44">
+        <div className="grow p-16 px-24">
             <div className="w-full flex justify-around">
-                <div className="w-1/4 flex flex-col gap-5">
+                <div className="w-1/5 flex flex-col gap-5">
                     <div className="text-4xl mb-6 tracking-tight flex justify-between">
                         <b>Friends</b>
                         <div
@@ -131,7 +151,7 @@ export default function Friends() {
                              className="bg-sky-50 border-3 border-sky-800 rounded-lg text-2xl p-5">{friends[id]}</div>
                     ))}
                 </div>
-                <div className="w-1/4 flex flex-col gap-5">
+                <div className="w-1/5 flex flex-col gap-5">
                     <div className="text-4xl mb-6 tracking-tight flex justify-between">
                         <b>Friend Requests</b>
                         <div
@@ -155,7 +175,26 @@ export default function Friends() {
                         </div>
                     )}
                 </div>
-                <div className="w-1/4 flex flex-col gap-5">
+                <div className="w-1/5 flex flex-col gap-5">
+                    <div className="text-4xl mb-6 tracking-tight flex justify-between">
+                        <b>Suggestions</b>
+                        <div
+                            className="text-white text-2xl border-3 border-red-400 bg-red-400 rounded-full w-10 h-10 text-center leading-9">{Object.keys(suggestions).length}</div>
+                    </div>
+                    {Object.keys(suggestions).map((index, i) => (
+                        <div key={i}
+                             className="flex justify-between bg-sky-50 border-3 border-sky-800 rounded-lg text-2xl p-5">
+                            {/*@ts-ignore*/}
+                            <div>{suggestions[index].name}</div>
+                            {/*@ts-ignore*/}
+                            <button onClick={() => sendRequest(suggestions[index].id)}
+                                    className="text-sm cursor-pointer bg-[#ffc107] hover:bg-[#d6a207] px-2 rounded-lg">Send
+                                Request
+                            </button>
+                        </div>
+                    ))}
+                </div>
+                <div className="w-1/5 flex flex-col gap-5">
                     <div className="text-4xl mb-6 tracking-tight">
                         <b>Search</b>
                     </div>
