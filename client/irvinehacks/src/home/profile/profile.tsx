@@ -1,6 +1,7 @@
 import "./profile.css";
 import {ReactNode, useEffect} from "react";
-import {useOutletContext} from "react-router-dom";
+import {Link, useOutletContext} from "react-router-dom";
+//import {useAuth0} from "@auth0/auth0-react";
 
 const profile = {
     name: "Jalen Lukumura",
@@ -13,6 +14,7 @@ const profile = {
 export default function Profile() {
     // @ts-ignore
     const {setCurrPage} = useOutletContext();
+    //const {user} = useAuth0();
 
     useEffect(() => {
         setCurrPage(1);
@@ -21,11 +23,15 @@ export default function Profile() {
     return (
         <div className="profileParent grow items-center pt-6 px-20">
             <div className="profileDiv1">
-                <div className="flex flex-col items-start ml-16 gap-4">
-                    <p className="text-center text-6xl p-4 border-4 border-black">{profile.name}</p>
+                <div className="flex flex-col items-center ml-16 gap-4">
+                    <b className="text-center text-6xl p-6 bg-sky-50 border-4 border-sky-800 rounded-xl">{profile.name}</b>
                     <p className="text-center text-2xl mt-10">{profile.school}</p>
                     <p className="text-center text-2xl">{profile.degree}</p>
                     <p className="text-center text-2xl">{profile.grade}</p>
+                    <Link to="/settings" className="flex gap-2 border-b-[1.5px]">
+                        <button className="text-xl leading-8 cursor-pointer"><b>Edit Profile</b></button>
+                        <img className="-mt-0.5" width="20" src="/editIcon.svg" alt=''/>
+                    </Link>
                 </div>
             </div>
             <div className="profileDiv2">
@@ -34,7 +40,7 @@ export default function Profile() {
             </div>
             <div className="profileDiv3 h-full">
                 <div className="flex flex-col w-3/4 h-full m-auto">
-                    <p className="text-4xl mt-16">Classes:</p>
+                    <b className="text-4xl mt-16">Classes:</b>
                     <div className="grow flex items-center justify-between w-full m-auto">
                         {profile.classes.map((name, i) =>
                             <Card key={i}>{name}</Card>
@@ -48,7 +54,7 @@ export default function Profile() {
 
 function Card({children}: { children: Readonly<ReactNode> }) {
     return (
-        <div className="w-52 h-32 border-4 border-amber-400 rounded-xl">
+        <div className="w-52 h-32 bg-[#fefbf2] border-4 border-amber-400 rounded-xl">
             <p className="text-center mt-6">{children}</p>
         </div>
     )

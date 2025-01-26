@@ -6,6 +6,7 @@ import Friends from "./home/friends";
 
 import Login from "./login";
 import {useAuth0} from "@auth0/auth0-react";
+import Settings from "./home/settings";
 
 export default function App() {
     const { isAuthenticated, isLoading } = useAuth0();
@@ -25,6 +26,7 @@ export default function App() {
                         <Route path="calendar" element={<Calendar/>}/>
                         <Route path="friends" element={<Friends/>}/>
                     </Route>
+                    <Route path="settings" element={<Settings/>}/>
                 </Routes>
             ) : (
                 <Login/>

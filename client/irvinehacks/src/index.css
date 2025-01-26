@@ -3,7 +3,7 @@
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   color: black;
-  background-color: #fffaf2;
+  background-color: rgb(203, 213, 225);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
