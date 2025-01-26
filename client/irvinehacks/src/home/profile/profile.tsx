@@ -19,10 +19,9 @@ export default function Profile() {
     const {user} = useAuth0();
 
     const [profile, setProfile] = useState({name: '', degree: '', grade: '', classes: []});
+    const [classCode, setClassCode] = useState('');
 
-    useEffect(() => {
-        setCurrPage(1);
-
+    const updateCourses = () => {
         if (user != undefined) {
             const id: string = user.sub!;
 
@@ -30,7 +29,6 @@ export default function Profile() {
                 method: "GET"
             }).then(res => res.json())
                 .then(data => {
-                    console.log(data)
                     setProfile({
                         name: data.name,
                         degree: data.major,
@@ -39,15 +37,74 @@ export default function Profile() {
                     });
                 });
         }
+    }
+
+    const addClass = () => {
+        if (user != undefined) {
+            const id: string = user.sub!;
+
+            // @ts-ignore
+            if (classCode.length == 5 && !isNaN(classCode)) {
+                fetch("http://localhost:8000/add/courses", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id: id,
+                        section_codes: [classCode]
+                    })
+                }).then(res => res.json())
+                    .then(data => {
+                        setClassCode('');
+
+                        updateCourses();
+
+                        if (!data.ok)
+                            window.alert("Invalid code!")
+                    })
+            } else {
+                window.alert("Invalid course code!")
+            }
+        }
+    }
+
+    const removeClass = (code: number) => {
+        if (user != undefined) {
+            const id: string = user.sub!;
+
+            fetch("http://localhost:8000/delete/courses", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id: id,
+                    section_codes: [code]
+                })
+            }).then(res => res.json())
+                .then(data => {
+                    updateCourses();
+
+                    if (!data.ok)
+                        window.alert("Oops! Internal server error!")
+                })
+        }
+    }
+
+    useEffect(() => {
+        setCurrPage(1);
+
+        updateCourses();
     }, [])
 
     return (
         <div className="profileParent grow items-center pt-6 px-20">
             <div className="profileDiv1">
                 <div className="flex flex-col items-center ml-16 gap-4">
-                    <b className="text-center text-6xl p-6 bg-sky-50 border-4 border-sky-800 rounded-xl">{profile.name}</b>
-                    <p className="text-center text-2xl">{profile.degree}</p>
-                    <p className="text-center text-2xl">{profile.grade}</p>
+                    <b className="text-center text-6xl p-6 bg-sky-50 border-4 border-sky-800 rounded-xl">{profile.name == '' ? "Loading..." : profile.name}</b>
+                    <p className="text-center text-2xl">Major: {profile.degree == '' ? "Loading..." : profile.degree}</p>
+                    <p className="text-center text-2xl">Grade: {profile.grade == '' ? "Loading..." : profile.grade}</p>
                     <Link to="/settings" className="flex gap-2 border-b-[1.5px]">
                         <button className="text-xl leading-8 cursor-pointer"><b>Edit Profile</b></button>
                         <img className="-mt-0.5" width="20" src="/editIcon.svg" alt=''/>
@@ -60,10 +117,26 @@ export default function Profile() {
             </div>
             <div className="profileDiv3 h-full">
                 <div className="flex flex-col w-3/4 h-full m-auto">
-                    <b className="text-4xl mt-16">Classes:</b>
-                    <div className="grow flex items-center justify-between w-full m-auto">
-                        {profile.classes.map((name, i) =>
-                            <Card key={i}>{name}</Card>
+                    <div className="flex justify-between mt-16">
+                        <b className="text-4xl">Classes:</b>
+                        <div className="flex gap-2">
+                            <input value={classCode} onChange={e => setClassCode(e.target.value)}
+                                   className="text-lg w-32 border-4 border-sky-700 focus:outline-sky-800 focus:shadow-sky-800 bg-white rounded-lg px-2"
+                                   type="text" maxLength={5}/>
+                            <button onClick={addClass}
+                                    className="bg-sky-700 hover:bg-sky-800 text-white p-3 rounded-lg cursor-pointer">
+                                Add Class
+                            </button>
+                        </div>
+                    </div>
+                    <div className="grow flex items-center justify-between w-full m-auto gap-1">
+                        {profile.classes.map((name: {
+                                sectionCode: number,
+                                courseName: string,
+                                courseType: string
+                            }, i) =>
+                                <Card code={name.sectionCode} removeClass={removeClass}
+                                      key={i}>{name.courseName}<br/>{name.courseType}</Card>
                         )}
                     </div>
                 </div>
@@ -72,10 +145,17 @@ export default function Profile() {
     );
 }
 
-function Card({children}: { children: Readonly<ReactNode> }) {
+function Card({code, removeClass, children}: {
+    code: number,
+    removeClass: (code: number) => void,
+    children: Readonly<ReactNode>
+}) {
     return (
-        <div className="w-52 h-32 bg-[#fefbf2] border-4 border-amber-400 rounded-xl">
+        <div className="relative w-52 h-32 bg-[#fefbf2] border-4 border-amber-400 rounded-xl">
             <p className="text-center mt-6">{children}</p>
+            <button onClick={() => removeClass(code)}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-400 rounded-full text-center text-white cursor-pointer z-10">
+                <b>–</b></button>
         </div>
     )
 }

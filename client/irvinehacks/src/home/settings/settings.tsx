@@ -1,6 +1,9 @@
 import {Link} from "react-router-dom";
 
 export default function Settings() {
+
+
+
     return (
         <div className="w-full h-full bg-zinc-300">
             <div className="w-full text-3xl pt-5 pl-7"><b>Zot</b>Sync</div>
@@ -36,17 +39,17 @@ export default function Settings() {
                         <input id="fourth" type="radio" name="grade" value="4th-year"/>
                         <label className="ml-4" htmlFor="fourth">4th-year</label>
                     </div>
-                </form>
-                <div className="flex justify-between">
-                    <Link to="/home/profile">
+                    <div className="flex justify-between mt-10">
+                        <Link to="/home/profile">
+                            <button
+                                className="p-2 py-1 rounded-sm cursor-pointer bg-red-400 hover:bg-[#d65052] text-white">Cancel
+                            </button>
+                        </Link>
                         <button
-                            className="p-2 py-1 rounded-sm cursor-pointer bg-red-400 hover:bg-[#d65052] text-white">Cancel
+                            className="p-2 py-1 rounded-sm cursor-pointer bg-[#28a745] hover:bg-[#1f8036] text-white">Save
                         </button>
-                    </Link>
-                    <button
-                        className="p-2 py-1 rounded-sm cursor-pointer bg-[#28a745] hover:bg-[#1f8036] text-white">Save
-                    </button>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     );
