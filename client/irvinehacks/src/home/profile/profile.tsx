@@ -129,7 +129,7 @@ export default function Profile() {
                             </button>
                         </div>
                     </div>
-                    <div className="grow flex items-center justify-between w-full m-auto gap-1">
+                    <div className="grow flex items-center justify-around w-full m-auto gap-1">
                         {profile.classes.map((name: {
                                 sectionCode: number,
                                 courseName: string,

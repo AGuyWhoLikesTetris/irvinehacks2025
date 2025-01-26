@@ -126,7 +126,9 @@ def view():
 
         c.execute("SELECT id FROM friend_request WHERE friend_id=?", (id,))
         friend_reqs = c.fetchall()
+        print(friend_reqs)
         friend_req_ids = [i[0] for i in friend_reqs]
+        print(friend_req_ids)
         friend_req_names = []
         for nid in friend_req_ids:
             c.execute("SELECT name FROM student WHERE id=?", (nid,))
