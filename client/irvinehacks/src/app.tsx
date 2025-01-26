@@ -8,6 +8,7 @@ import Login from "./login";
 import {useAuth0} from "@auth0/auth0-react";
 import Settings from "./home/settings";
 import Auth from "./auth";
+import Signup from "./signup";
 
 export default function App() {
     const { isAuthenticated, isLoading } = useAuth0();
@@ -29,6 +30,7 @@ export default function App() {
                     </Route>
                     <Route path="/settings" element={<Settings/>}/>
                     <Route path="/auth" element={<Auth/>}/>
+                    <Route path="/signup" element={<Signup/>}/>
                 </Routes>
             ) : (
                 <Login/>
