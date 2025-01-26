@@ -219,12 +219,12 @@ def search_users():
     conn = sqlite3.connect('database.db')
     try:
         c = conn.cursor()
-        c.execute('SELECT id FROM student WHERE name LIKE ?', (f'%{keyword}%',))
+        c.execute('SELECT id, name FROM student WHERE name LIKE ?', (f'%{keyword}%',))
         result = c.fetchall()
-        user_ids = [row[0] for row in result]
+        users = [{"id": row[0], "name": row[1]} for row in result]
     except sqlite3.DatabaseError as e:
         print(f"Error: {e}")
         return f"Failed to search users due to a database error: {e}."
     finally:
         conn.close()
-    return {"user_ids": user_ids}
+    return {"users": users}
