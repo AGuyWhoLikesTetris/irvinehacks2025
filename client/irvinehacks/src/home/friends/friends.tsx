@@ -160,7 +160,7 @@ export default function Friends() {
                         <b>Search</b>
                     </div>
                     <form className="flex" onSubmit={search}>
-                        <input placeholder="search"
+                        <input placeholder="Search"
                                value={searchTerm}
                                onChange={(e) => setSearchTerm(e.target.value)}
                                className="w-full text-2xl border-3 border-sky-700 focus:outline-sky-800 bg-white rounded-l-lg px-2 py-1"
