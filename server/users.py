@@ -5,6 +5,7 @@ import sqlite3
 bp = flask.Blueprint('users', __name__)
 
 @bp.route('/check_user_exists', methods=['GET'])
+@cross.origin()
 def check_user_exists():
     '''Requires id in the form of a query param'''
     id = flask.request.args.get('id', '')
@@ -23,6 +24,7 @@ def check_user_exists():
     return {"exists": False}
 
 @bp.route('/add/user', methods=['POST'])
+@cross.origin()
 def add_user():
     '''Requires id, name, major, grade in json data'''
     try:
@@ -48,6 +50,7 @@ def add_user():
     return "User added successfully"
 
 @bp.route('/delete/user', methods=['POST'])
+@cross.origin()
 def delete_user(id):
     '''Requires id in the form of a query param'''
     id = flask.request.json['id']
@@ -64,6 +67,7 @@ def delete_user(id):
     return "User deleted successfully"
 
 @bp.route('/view/user')
+@cross.origin()
 def view():
     '''Requires id in the form of a query param'''
     id = flask.request.args.get('id', '')
