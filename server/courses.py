@@ -20,6 +20,8 @@ def add_courses():
     try:
         c = conn.cursor()
         for i in range(len(courses)):
+            if not api.check_valid_section_code(courses[i]):
+                return {"ok": False, "error": "Invalid section code"}
             c.execute("INSERT INTO enrollment (id, section_code) \
                         VALUES (?, ?)", (id, courses[i]))
         conn.commit()

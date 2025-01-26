@@ -67,6 +67,30 @@ def delete_user(id):
         conn.close()
     return {"ok": True}
 
+@bp.route('/edit/user')
+@cross_origin
+def edit_user():
+    '''Requires id and a list of new values in json data'''
+    try:
+        content = flask.request.json
+        id = content['id']
+        name = content['name']
+        major = content['major']
+        grade = content['grade']
+    except KeyError as e:
+        return f"Missing key in JSON input: {e}", 400
+    conn = sqlite3.connect('database.db')
+    try:
+        c = conn.cursor()
+        c.execute("UPDATE student SET name=?, major=?, grade=? WHERE id=?", (name, major, grade, id))
+        conn.commit()
+    except sqlite3.DatabaseError as e:
+        print(f"Error: {e}")
+        return f"Failed to edit user due to a database error: {e}."
+    finally:
+        conn.close()
+    return {"ok": True}
+
 @bp.route('/view/user')
 @cross_origin()
 def view():
@@ -119,3 +143,21 @@ def view():
 
     rtn_obj = {'id': user[0], 'name': user[1], 'major': user[2], 'grade': user[3], 'courses': courses, 'friends': friends, 'friendReqs': friend_reqs}
     return rtn_obj
+
+@bp.route('/search/users', methods=['GET'])
+@cross_origin()
+def search_users():
+    '''Requires keyword in the form of a query param'''
+    keyword = flask.request.args.get('keyword', '')
+    conn = sqlite3.connect('database.db')
+    try:
+        c = conn.cursor()
+        c.execute('SELECT id FROM student WHERE name LIKE ?', (f'%{keyword}%',))
+        result = c.fetchall()
+        user_ids = [row[0] for row in result]
+    except sqlite3.DatabaseError as e:
+        print(f"Error: {e}")
+        return f"Failed to search users due to a database error: {e}."
+    finally:
+        conn.close()
+    return {"user_ids": user_ids}

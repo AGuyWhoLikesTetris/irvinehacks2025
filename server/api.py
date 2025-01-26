@@ -44,3 +44,11 @@ def retrieve_course_information(section_codes: list[int]):
                         "courseType": course_type
                     })
     return course_list
+
+def check_valid_section_code(section_code: int):
+    response = _retrieve_course_api_result([section_code])
+    print(response)
+    if response['data']['schools'] != []:
+        return True
+    else:
+        return False
