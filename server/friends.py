@@ -5,6 +5,7 @@ import sqlite3
 bp = flask.Blueprint('friends', __name__)
 
 @bp.route('/add/friend', methods=['POST'])
+@cross.origin()
 def add_friend():
     '''Requires id in query param and friend_id in json data'''
     try:
@@ -36,6 +37,7 @@ def add_friend():
     return "Added friend successfully"
 
 @bp.route('/delete/friend', methods=['POST'])
+@cross.origin()
 def delete_friend():
     '''Requires id in query param and friend_id in json data'''
     try:
@@ -59,6 +61,7 @@ def delete_friend():
 
 
 @bp.route('/add/friend_request', methods=['POST'])
+@cross.origin()
 def add_friend_request():
     '''Requires id in query param and friend_id in json data'''
     try:
@@ -85,6 +88,7 @@ def add_friend_request():
     return "Friend request sent successfully"
 
 @bp.route('/delete/friend_request', methods=['POST'])
+@cross.origin()
 def delete_friend_request():
     '''Requires id in query param and friend_id in json data'''
     try:
@@ -107,6 +111,7 @@ def delete_friend_request():
     return "Rejected friend successfully"
 
 @bp.route('/suggest_friends', methods=['GET'])
+@cross.origin()
 def suggest_friends():
     '''Requires id in the form of a query param'''
     id = flask.request.args.get('id', '')

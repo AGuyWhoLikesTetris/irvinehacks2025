@@ -2,8 +2,10 @@ import flask
 import json
 import sqlite3
 import api
+from flask_cors import CORS
 
 app = flask.Flask(__name__)
+CORS(app)
 
 import courses, friends, users
 
@@ -53,6 +55,7 @@ def init_db():
     connection.close()
 
 @app.route('/')
+@cross.origin()
 def index():
     conn = sqlite3.connect('database.db')
     try:
