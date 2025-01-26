@@ -1,11 +1,13 @@
 import flask
 import api
 import sqlite3
+from flask_cors import CORS, cross_origin
+
 
 bp = flask.Blueprint('courses', __name__)
 
 @bp.route('/add/courses', methods=['POST'])
-@cross.origin()
+@cross_origin()
 def add_courses():
     '''Requires id and a list of classes in json data'''
     try:
@@ -29,7 +31,7 @@ def add_courses():
     return "Added courses successfully"
 
 @bp.route('/delete/courses', methods=['POST'])
-@cross.origin()
+@cross_origin()
 def delete_courses():
     '''Requires id in query param and a list of classes in json data'''
     try:
@@ -53,7 +55,7 @@ def delete_courses():
 
 
 @bp.route('/students_with_same_course', methods=['GET'])
-@cross.origin()
+@cross_origin()
 def students_with_same_course():
     '''Requires id and course_name in the form of query params'''
     id = flask.request.args.get('id', '')
